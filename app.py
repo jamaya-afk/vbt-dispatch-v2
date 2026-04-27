@@ -391,6 +391,14 @@ def api_sync():
 
 if __name__ == "__main__":
     init_db()
+    port = int(os.getenv("PORT", "3000"))
+    try:
+        from waitress import serve
+
+        serve(app, host="0.0.0.0", port=port)
+    except Exception:
+        # Fallback only when waitress is unavailable.
+        app.run(host="0.0.0.0", port=port, debug=False, use_reloader=False)
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", "3000")), debug=True)
 import os
 from datetime import datetime, timezone

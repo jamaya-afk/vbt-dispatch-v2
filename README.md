@@ -45,6 +45,9 @@ Open:
 - rigo / rigo123
 - leonardo / leo123
 - carlos / carlos123
+
+## Python fallback note
+If you run `app.py`, it now prefers Waitress (production WSGI server) and avoids Flask debug/reloader defaults.
 # Dispatch Driver App MVP
 
 Flask + PostgreSQL MVP implementing the PO → Load → Driver → Submit → Approve → Bill flow.
