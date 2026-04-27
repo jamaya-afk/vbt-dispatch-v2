@@ -1,3 +1,13 @@
+# VBT Dispatch
+
+Railway deployment should treat this as a Node app.
+
+## Railway settings
+- **Root Directory**: repository root (`/`) where `package.json` lives.
+- **Start Command**: `npm start`
+- **Node version**: `20.x`
+
+## Local run
 # VBT Dispatch (Node + Express)
 
 Web dispatch app for Valley Best Concrete. Includes manager and 5 drivers, PO → loads flow, driver trip workflow, approvals, ready-to-bill, monthly calendar view, and optional Google Sheets sync.
@@ -22,6 +32,9 @@ npm install
 npm start
 ```
 
+## Entry file
+`npm start` runs:
+- `node server.js`
 Open:
 - `http://localhost:3000/login`
 
