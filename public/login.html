@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Valley Best Concrete Dispatch Login</title>
+  <link rel="icon" href="/public/logo.svg" type="image/svg+xml"/>
+  <style>
+    body{font-family:Arial,sans-serif;background:#e8eef5;margin:0;display:grid;min-height:100vh;place-items:center}
+    .card{background:#fff;padding:24px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.1);width:min(92vw,420px)}
+    img{width:220px;display:block;margin:0 auto 8px;background:#fff;border-radius:8px;padding:2px}
+    h1{text-align:center;margin:8px 0 14px;font-size:1.2rem;color:#0f3460}
+    label{display:block;margin:10px 0 5px;color:#334}
+    input{width:100%;padding:10px;border:1px solid #cdd5df;border-radius:8px;box-sizing:border-box}
+    button{margin-top:12px;width:100%;padding:11px;border:0;background:#0f3460;color:#fff;border-radius:8px;font-weight:700}
+  </style>
+</head>
+<body>
+  <form class="card" method="post" action="/login">
+    <img src="/public/logo.svg" alt="VBC logo"/>
+    <h1>Dispatch Login</h1>
+    <label>Username</label><input name="username" required>
+    <label>Password</label><input type="password" name="password" required>
+    <button type="submit">Sign In</button>
+  </form>
+</body>
+</html>
