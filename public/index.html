@@ -1,0 +1,132 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Valley Best Concrete Dispatch</title>
+  <link rel="icon" href="/public/logo.svg" type="image/svg+xml"/>
+  <style>
+    :root{--blue:#0f3460;--lt:#edf3fa;--gray:#6b7280}
+    body{margin:0;font-family:Arial,sans-serif;background:var(--lt)}
+    .app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+    .sidebar{background:#122f52;color:#fff;padding:14px}
+    .sidebar img{width:180px;background:#fff;border-radius:8px;padding:2px;margin-bottom:10px}
+    .sidebtn{display:block;width:100%;margin:6px 0;padding:10px;border:0;border-radius:8px;background:#274f7e;color:#fff;text-align:left}
+    .main{padding:14px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;background:#fff;padding:10px;border-radius:10px}
+    .card{background:#fff;border-radius:10px;padding:12px;margin-top:10px}
+    .hidden{display:none}
+    .cols{display:grid;grid-template-columns:repeat(6,minmax(200px,1fr));gap:8px;overflow:auto}
+    .col{background:#fff;border-radius:8px;padding:8px}
+    .load{border-left:4px solid var(--blue);background:#eaf2ff;padding:6px;border-radius:6px;margin-bottom:6px}
+    .pill{display:inline-block;padding:2px 6px;border-radius:999px;font-size:12px;background:#dce9fb}
+    table{width:100%;border-collapse:collapse}.th td,th{border:1px solid #ddd;padding:6px}
+    body.driver-mode .app{grid-template-columns:1fr} body.driver-mode .sidebar{display:none}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <img src="/public/logo.svg" alt="logo"/>
+      <button class="sidebtn" onclick="show('board')">Board</button>
+      <button class="sidebtn" onclick="show('approvals')">Approvals <span id="pendingBadge"></span></button>
+      <button class="sidebtn" onclick="show('billing')">Ready to Bill</button>
+      <button class="sidebtn" onclick="show('calendar')">Monthly Calendar</button>
+      <button class="sidebtn" onclick="logout()">Sign out</button>
+    </aside>
+    <main class="main">
+      <div class="topbar">
+        <h2 id="title">Dispatch Board</h2>
+        <div>
+          <button id="newPoBtn" onclick="openPoForm()">+ New PO</button>
+          <button id="syncBtn" onclick="syncSheets()">Sync</button>
+          <button onclick="logout()">Sign out</button>
+        </div>
+      </div>
+
+      <section id="sec-board"></section>
+      <section id="sec-approvals" class="hidden"></section>
+      <section id="sec-billing" class="hidden"></section>
+      <section id="sec-calendar" class="hidden"></section>
+      <section id="sec-driver" class="hidden"></section>
+    </main>
+  </div>
+
+<script>
+let ME = null, DATA = {pos:[],loads:[],trucks:[]};
+const secMap = {board:'sec-board',approvals:'sec-approvals',billing:'sec-billing',calendar:'sec-calendar',driver:'sec-driver'};
+
+async function api(url, opts={}){ const r=await fetch(url,{headers:{'Content-Type':'application/json'},...opts}); if(!r.ok) throw new Error(await r.text()); return r.json(); }
+function gps(){return new Promise((resolve)=>{if(!navigator.geolocation)return resolve(null); navigator.geolocation.getCurrentPosition(p=>resolve({lat:p.coords.latitude,lng:p.coords.longitude}),()=>resolve(null));});}
+function statusPill(l){if(l.billStatus==='billed')return'billed'; if(l.approvalStatus==='approved')return'approved'; if(l.approvalStatus==='submitted')return'submitted'; if(l.status==='completed')return'delivered'; return 'assigned';}
+
+function show(name){Object.values(secMap).forEach(id=>document.getElementById(id).classList.add('hidden')); document.getElementById(secMap[name]).classList.remove('hidden'); document.getElementById('title').textContent = name==='board'?'Dispatch Board':name==='approvals'?'Approvals':name==='billing'?'Ready to Bill':name==='calendar'?'Monthly Calendar':'My Dispatch';}
+
+function renderBoard(){
+  const byTruck = {unassigned:[]}; DATA.trucks.forEach(t=>byTruck[t]=[]);
+  DATA.loads.forEach(l=>{ if(l.voided) return; const k=l.truckId||'unassigned'; (byTruck[k]||(byTruck[k]=[])).push(l); });
+  const cols=['unassigned',...DATA.trucks].map(t=>`<div class="col"><h4>${t==='unassigned'?'Unassigned':t}</h4>${(byTruck[t]||[]).map(l=>`<div class='load'>PO #${l.poNumber} · ${l.customer}<br>${l.material} · <span class='pill'>${statusPill(l)}</span></div>`).join('') || '<div class="pill">FREE</div>'}</div>`).join('');
+  document.getElementById('sec-board').innerHTML = `<div class='card cols'>${cols}</div>`;
+}
+
+function renderApprovals(){
+  const rows = DATA.loads.filter(l=>l.approvalStatus==='submitted');
+  document.getElementById('pendingBadge').textContent = rows.length?`(${rows.length})`:'';
+  document.getElementById('sec-approvals').innerHTML = `<div class='card'>${rows.map(l=>`<div class='load'>PO #${l.poNumber} ${l.customer} ${l.material} by ${l.truckId}<br>Started: ${l.timestamps?.start||'-'} | Delivered: ${l.timestamps?.completed||'-'}<br>${l.ticketImage?`<img src='${l.ticketImage}' style='max-width:160px'>`:''} ${l.pod?.signature?`<img src='${l.pod.signature}' style='max-width:160px'>`:''}<br><button onclick='approve(${l.id})'>Approve & Lock</button> <button onclick='rejectLoad(${l.id})'>Reject</button></div>`).join('') || 'No submitted loads.'}</div>`;
+}
+
+function renderBilling(){
+  const rows = DATA.loads.filter(l=>l.approvalStatus==='approved' && l.billStatus==='ready');
+  document.getElementById('sec-billing').innerHTML = `<div class='card'><button onclick='markBilled()'>Mark selected as billed</button><table><tr><th></th><th>PO</th><th>Driver</th><th>Material</th><th>Date</th></tr>${rows.map(l=>`<tr><td><input type='checkbox' class='bill-check' value='${l.id}'></td><td>${l.poNumber}</td><td>${l.truckId}</td><td>${l.material}</td><td>${l.deliveryDate||''}</td></tr>`).join('')}</table></div>`;
+}
+
+function renderCalendar(){
+  const month = new Date(); const y=month.getFullYear(), m=month.getMonth(); const first = new Date(y,m,1); const start = new Date(first); start.setDate(1-(first.getDay()||7)+1);
+  let html = `<div class='card'><h3>${month.toLocaleString('default',{month:'long'})} ${y}</h3><div class='cols'>`;
+  for(let d=0; d<35; d++){ const cur = new Date(start); cur.setDate(start.getDate()+d); const ds=cur.toISOString().slice(0,10);
+    html += `<div class='col'><strong>${cur.toDateString()}</strong>`;
+    for(const t of DATA.trucks){ const items = DATA.loads.filter(l=>l.deliveryDate===ds && l.truckId===t && !l.voided); html += `<div><b>${t}</b>${items.length?items.map(l=>`<div class='load'>PO #${l.poNumber} ${l.material} (${statusPill(l)})<br><button onclick='reassign(${l.id})'>Reassign</button></div>`).join(''):` <span class='pill'>FREE</span>`}</div>`; }
+    const unassigned = DATA.loads.filter(l=>l.deliveryDate===ds && !l.truckId && !l.voided);
+    html += `<div><b>Unassigned</b>${unassigned.map(l=>`<div class='load'>PO #${l.poNumber} ${l.material}</div>`).join('')||' <span class="pill">None</span>'}</div></div>`;
+  }
+  html += '</div></div>'; document.getElementById('sec-calendar').innerHTML = html;
+}
+
+function renderDriver(){
+  const rows = DATA.loads;
+  document.getElementById('sec-driver').innerHTML = `<div class='card'>${rows.map(l=>`<div class='load'><b>PO #${l.poNumber}</b> ${l.customer}<br>${l.address||''} ${l.city||''}<br>${l.material} | ${statusPill(l)}<br>
+  <button onclick='trip(${l.id},"start-trip")'>Start Trip</button>
+  <button onclick='trip(${l.id},"arrived-pickup")'>Arrived Pickup</button>
+  <button onclick='uploadTicket(${l.id})'>Upload Ticket</button>
+  <button onclick='captureSign(${l.id})'>Customer Signature</button>
+  <button onclick='trip(${l.id},"delivered")'>Complete Delivery</button></div>`).join('')||'No assigned loads.'}</div>`;
+}
+
+async function refresh(){
+  ME = await api('/api/me');
+  if(ME.role==='driver'){document.body.classList.add('driver-mode'); document.getElementById('newPoBtn').style.display='none'; document.getElementById('syncBtn').style.display='none'; show('driver'); DATA.loads=await api('/api/my-dispatch'); DATA.trucks=[]; renderDriver(); return;}
+  DATA = await api('/api/data'); renderBoard(); renderApprovals(); renderBilling(); renderCalendar(); show('board');
+}
+
+async function openPoForm(){
+  const poNumber=prompt('PO Number (blank = auto)')||''; const customer=prompt('Customer')||''; const deliveryDate=prompt('Delivery date YYYY-MM-DD')||''; const address=prompt('Address')||''; const city=prompt('City')||''; const pickup=prompt('Pickup Yard')||''; const notes=prompt('Notes')||'';
+  const assignments=[]; while(true){ const truckId=prompt('Assign driver truckId (beryle/matthew/rigo/leonardo/carlos or blank unassigned). Cancel to finish'); if(truckId===null) break; const material=prompt('Material')||'3/4 Rock'; const loadsAssigned=Number(prompt('How many loads?', '1')||1); assignments.push({truckId,material,loadsAssigned}); }
+  await api('/api/pos',{method:'POST',body:JSON.stringify({poNumber,customer,deliveryDate,address,city,pickup,notes,assignments})});
+  await refresh();
+}
+
+async function trip(id, action){ const g=await gps(); await api(`/api/loads/${id}/trip-action`,{method:'POST',body:JSON.stringify({action,gps:g})}); await refresh(); }
+async function uploadTicket(id){ const b64=prompt('Paste ticket image data URL (from camera capture implementation)'); if(!b64) return; await api(`/api/loads/${id}/trip-action`,{method:'POST',body:JSON.stringify({action:'arrived-pickup',ticketImage:b64})}); await refresh(); }
+async function captureSign(id){ const signedBy=prompt('Customer name'); const signature=prompt('Paste signature data URL'); if(!signedBy||!signature) return; await api(`/api/loads/${id}/trip-action`,{method:'POST',body:JSON.stringify({action:'arrived-pickup',pod:{signedBy,signature}})}); await refresh(); }
+
+async function approve(id){ await api(`/api/loads/${id}/approve`,{method:'POST'}); await refresh(); }
+async function rejectLoad(id){ const reason=prompt('Reject reason')||'Rejected'; await api(`/api/loads/${id}/reject`,{method:'POST',body:JSON.stringify({reason})}); await refresh(); }
+async function markBilled(){ const ids=[...document.querySelectorAll('.bill-check:checked')].map(i=>Number(i.value)); await api('/api/loads/bill',{method:'POST',body:JSON.stringify({ids})}); await refresh(); }
+async function reassign(id){ const truckId=prompt('New truckId (blank = unassigned)')||''; const deliveryDate=prompt('New delivery date YYYY-MM-DD (optional)')||undefined; await api(`/api/loads/${id}`,{method:'PUT',body:JSON.stringify({truckId,driverName:truckId,deliveryDate,status:truckId?'active':'active'})}); await refresh(); }
+async function syncSheets(){ const out=await api('/api/sync',{method:'POST'}); alert(JSON.stringify(out)); }
+function logout(){ location.href='/logout'; }
+
+refresh().catch((e)=>{document.body.innerHTML='<pre style="padding:12px">Init failed:\n'+e.message+'</pre>';});
+</script>
+</body>
+</html>

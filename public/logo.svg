@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 110" role="img" aria-label="Valley Best Concrete logo">
+  <rect width="420" height="110" rx="12" fill="#0f3460"/>
+  <rect x="10" y="10" width="90" height="90" rx="10" fill="#4fa3ff"/>
+  <path d="M25 70 L45 35 L65 70 Z" fill="#ffffff"/>
+  <path d="M45 75 L58 52 L72 75 Z" fill="#d9e8f7"/>
+  <text x="115" y="50" font-family="Arial, sans-serif" font-size="26" font-weight="700" fill="#ffffff">Valley Best</text>
+  <text x="115" y="80" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#9dc9ff">Concrete Inc.</text>
+</svg>
