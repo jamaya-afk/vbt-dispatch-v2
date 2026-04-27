@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Ready to Bill</h2>
+<form method="get" class="card filters">
+  <label>Customer <input name="customer"></label>
+  <label>PO # <input name="po"></label>
+  <label>Driver <input name="driver"></label>
+  <label>Material <input name="material"></label>
+  <label>From <input type="date" name="from_date"></label>
+  <label>To <input type="date" name="to_date"></label>
+  <button type="submit">Filter</button>
+</form>
+
+{% for load, po, driver in rows %}
+<div class="card">
+  <p><strong>PO:</strong> {{ po.po_number }} | <strong>Customer:</strong> {{ po.customer }}</p>
+  <p><strong>Driver:</strong> {{ driver.name if driver else 'Unassigned' }} | <strong>Material:</strong> {{ load.material_name }}</p>
+  <p><strong>Date:</strong> {{ load.delivery_date }} | <strong>Status:</strong> {{ load.status }}</p>
+  <form method="post">
+    <input type="hidden" name="load_id" value="{{ load.id }}">
+    <input type="hidden" name="billing_action" value="billed">
+    <input name="billing_notes" placeholder="Billing notes">
+    <button type="submit">Mark Billed</button>
+  </form>
+</div>
+{% else %}
+<p>No approved loads ready to bill.</p>
+{% endfor %}
+{% endblock %}

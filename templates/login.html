@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card">
+  <h2>Login</h2>
+  <form method="post">
+    <label>Username <input name="username" required></label>
+    <label>Password/PIN <input type="password" name="password" required></label>
+    <button type="submit">Sign In</button>
+  </form>
+  <p>Seed logins: manager, beryle, matthew, rigo, leonardo, carlos (password 1234).</p>
+</div>
+{% endblock %}

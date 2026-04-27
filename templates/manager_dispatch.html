@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Dispatch Board</h2>
+<div class="card">
+  <strong>Unassigned:</strong> {{ status_counts.unassigned }} |
+  <strong>Submitted:</strong> {{ status_counts.submitted }} |
+  <strong>Approved:</strong> {{ status_counts.approved }} |
+  <strong>Billed:</strong> {{ status_counts.billed }}
+</div>
+
+<form method="get" class="card filters">
+  <label>Date <input type="date" name="date"></label>
+  <label>Driver
+    <select name="driver">
+      <option value="">All</option>
+      {% for driver in drivers %}
+      <option value="{{ driver.id }}">{{ driver.name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Customer <input name="customer"></label>
+  <label>PO # <input name="po"></label>
+  <label>Status
+    <select name="status">
+      <option value="">All</option>
+      {% for s in ['unassigned','assigned','in_progress','delivered','submitted','approved','rejected','billed'] %}
+      <option value="{{ s }}">{{ s }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <button type="submit">Filter</button>
+</form>
+
+<table>
+  <tr>
+    <th>Date</th><th>PO</th><th>Customer</th><th>Job Site</th><th>Material</th><th>Driver</th><th>Status</th>
+  </tr>
+  {% for load, po, driver in rows %}
+  <tr>
+    <td>{{ load.delivery_date }}</td>
+    <td>{{ po.po_number }}</td>
+    <td>{{ po.customer }}</td>
+    <td>{{ po.job_site_address }}</td>
+    <td>{{ load.material_name }} ({{ load.load_number }}/{{ load.total_loads_for_material }})</td>
+    <td>{{ driver.name if driver else 'UNASSIGNED' }}</td>
+    <td>{{ load.status }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

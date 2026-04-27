@@ -475,6 +475,7 @@ app.post('/api/sync', reqAuth, reqMgr, async (req, res) => {
 });
 
 app.listen(PORT, '0.0.0.0', async () => {
+app.listen(PORT, async () => {
   await loadStore();
   console.log(`VBT dispatch running on :${PORT}`);
 });

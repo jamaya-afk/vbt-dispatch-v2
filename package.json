@@ -10,6 +10,7 @@
   },
   "engines": {
     "node": "20.x"
+    "node": ">=20"
   },
   "dependencies": {
     "connect-pg-simple": "^9.0.1",
