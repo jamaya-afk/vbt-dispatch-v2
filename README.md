@@ -1,7 +1,6 @@
 # Dispatch Driver App MVP
 
 Flask + PostgreSQL MVP implementing the PO → Load → Driver → Submit → Approve → Bill flow.
-Includes branded Valley Best header/logo and a manager monthly calendar board that uses live `load_assignments` data.
 
 ## Run locally
 
@@ -33,8 +32,3 @@ Includes branded Valley Best header/logo and a manager monthly calendar board th
 ## Railway production safety
 
 If `FLASK_ENV=production` and `DATABASE_URL` is missing, the app raises an error at startup.
-
-## Branding asset
-
-- `static/logo.svg` is the current logo asset used in login, manager, and driver headers.
-- Replace with your uploaded official logo file if desired (keep filename or update template references).

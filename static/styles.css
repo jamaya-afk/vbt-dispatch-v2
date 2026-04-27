@@ -1,12 +1,9 @@
-body { font-family: Arial, sans-serif; margin: 0; background: #edf2f7; color: #1b2330; }
-header { background: linear-gradient(90deg, #0f3460, #1f5b99); color: #fff; padding: 14px; }
-.brand { display: flex; gap: 12px; align-items: center; margin-bottom: 8px; }
-.brand-logo { width: 170px; max-width: 45vw; height: auto; background: #fff; border-radius: 8px; padding: 2px; }
-header h1 { margin: 0; font-size: 1.2rem; }
-.brand-subtitle { margin: 2px 0 0; color: #d6e7ff; font-size: 0.9rem; }
+body { font-family: Arial, sans-serif; margin: 0; background: #f4f5f7; }
+header { background: #0f3460; color: #fff; padding: 14px; }
+header h1 { margin: 0 0 8px; font-size: 1.2rem; }
 nav a { color: #fff; margin-right: 10px; text-decoration: none; font-weight: 600; }
 main { padding: 16px; }
-.card { background: #fff; border-radius: 10px; padding: 12px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.1); border: 1px solid #d8e2ef; }
+.card { background: #fff; border-radius: 8px; padding: 12px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
 .load { border-left: 6px solid #0f3460; }
 label { display: block; margin: 8px 0; }
 input, textarea, select, button { width: 100%; padding: 8px; margin-top: 4px; box-sizing: border-box; }
@@ -18,22 +15,3 @@ th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
 .flash { padding: 8px; margin: 8px 16px; border-radius: 6px; }
 .flash.success { background: #ddffdd; }
 .flash.error { background: #ffd6d6; }
-.toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
-.calendar-nav { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.btn-link { background: #d8e8fb; color: #0f3460; padding: 8px 10px; border-radius: 6px; text-decoration: none; font-weight: 600; }
-.calendar-filters { display: grid; grid-template-columns: repeat(4, minmax(150px, 1fr)); gap: 8px; width: 100%; }
-.calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(220px, 1fr)); gap: 8px; overflow-x: auto; }
-.weekday { font-weight: 700; color: #4b5a6e; text-align: center; padding: 6px; background: #dce9f8; border-radius: 6px; }
-.day-cell { min-height: 210px; background: #fff; border: 1px solid #d7e0eb; border-radius: 8px; padding: 8px; }
-.day-cell.outside { background: #f2f5f8; color: #8a97a6; }
-.day-header { font-weight: 700; margin-bottom: 6px; }
-.driver-row { margin-bottom: 6px; display: flex; flex-direction: column; gap: 4px; }
-.free-chip { display: inline-block; font-size: 0.8rem; background: #e3eaf2; padding: 3px 6px; border-radius: 6px; width: fit-content; }
-.load-chip { display: block; text-decoration: none; font-size: 0.78rem; padding: 4px 6px; border-radius: 6px; border-left: 4px solid #0f3460; background: #e8f1ff; color: #1b2330; }
-.status-unassigned { border-left-color: #6c757d; background: #edf0f2; }
-.status-in_progress { border-left-color: #0077b6; background: #e2f3ff; }
-.status-delivered { border-left-color: #2a9d8f; background: #def7f3; }
-.status-submitted { border-left-color: #f4a261; background: #fff3e8; }
-.status-approved { border-left-color: #4caf50; background: #ebf8eb; }
-.status-rejected { border-left-color: #e63946; background: #fdecee; }
-.status-billed { border-left-color: #7b2cbf; background: #f2eafd; }

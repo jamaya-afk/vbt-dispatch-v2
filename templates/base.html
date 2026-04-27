@@ -3,23 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Valley Best Concrete Dispatch</title>
+  <title>Dispatch MVP</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='logo.svg') }}">
 </head>
 <body>
   <header>
-    <div class="brand">
-      <img src="{{ url_for('static', filename='logo.svg') }}" alt="Valley Best Concrete Inc logo" class="brand-logo">
-      <div>
-        <h1>Valley Best Concrete Inc.</h1>
-        <p class="brand-subtitle">Dispatch Driver App</p>
-      </div>
-    </div>
+    <h1>Dispatch Driver App</h1>
     {% if current_user.is_authenticated %}
       <nav>
         {% if current_user.role == 'manager' %}
-          <a href="{{ url_for('manager_calendar') }}">Calendar</a>
           <a href="{{ url_for('dispatch_board') }}">Dispatch Board</a>
           <a href="{{ url_for('create_po') }}">Create PO</a>
           <a href="{{ url_for('approvals') }}">Approvals</a>

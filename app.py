@@ -1,13 +1,12 @@
 import os
-import calendar
-from datetime import date, datetime, timedelta, timezone
+from datetime import datetime, timezone
 from functools import wraps
 from pathlib import Path
 
 from flask import Flask, abort, flash, redirect, render_template, request, send_file, url_for
 from flask_login import LoginManager, UserMixin, current_user, login_required, login_user, logout_user
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import and_, or_
+from sqlalchemy import and_
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
@@ -174,7 +173,7 @@ def home():
     if not current_user.is_authenticated:
         return redirect(url_for("login"))
     if current_user.role == "manager":
-        return redirect(url_for("manager_calendar"))
+        return redirect(url_for("dispatch_board"))
     return redirect(url_for("driver_loads"))
 
 
@@ -241,93 +240,6 @@ def dispatch_board():
         rows=rows,
         drivers=drivers,
         status_counts=status_counts,
-    )
-
-
-@app.route("/manager/calendar")
-@login_required
-@manager_required
-def manager_calendar():
-    month_param = request.args.get("month")
-    if month_param:
-        current_month = datetime.strptime(month_param, "%Y-%m").date().replace(day=1)
-    else:
-        today = date.today()
-        current_month = today.replace(day=1)
-
-    first_weekday, num_days = calendar.monthrange(current_month.year, current_month.month)
-    month_start = current_month
-    month_end = current_month.replace(day=num_days)
-
-    query = db.session.query(LoadAssignment, PurchaseOrder, User).join(
-        PurchaseOrder, PurchaseOrder.id == LoadAssignment.purchase_order_id
-    ).outerjoin(User, User.id == LoadAssignment.driver_id).filter(
-        LoadAssignment.delivery_date >= month_start,
-        LoadAssignment.delivery_date <= month_end,
-    )
-
-    selected_driver = request.args.get("driver")
-    selected_status = request.args.get("status")
-    selected_customer_po = request.args.get("search")
-
-    if selected_driver:
-        if selected_driver == "unassigned":
-            query = query.filter(LoadAssignment.driver_id.is_(None))
-        else:
-            query = query.filter(LoadAssignment.driver_id == int(selected_driver))
-    if selected_status:
-        query = query.filter(LoadAssignment.status == selected_status)
-    if selected_customer_po:
-        query = query.filter(
-            or_(
-                PurchaseOrder.customer.ilike(f"%{selected_customer_po}%"),
-                PurchaseOrder.po_number.ilike(f"%{selected_customer_po}%"),
-            )
-        )
-
-    rows = query.order_by(LoadAssignment.delivery_date, LoadAssignment.id).all()
-    drivers = User.query.filter_by(role="driver", active=True).order_by(User.name).all()
-
-    assignments_by_day = {}
-    for load, po, driver in rows:
-        assignments_by_day.setdefault(load.delivery_date, []).append((load, po, driver))
-
-    calendar_weeks = []
-    current = month_start - timedelta(days=first_weekday)
-    for _ in range(6):
-        week_days = []
-        for _ in range(7):
-            day_rows = assignments_by_day.get(current, [])
-            driver_map = {driver.id: [] for driver in drivers}
-            unassigned = []
-            for load, po, driver in day_rows:
-                if driver:
-                    driver_map[driver.id].append((load, po, driver))
-                else:
-                    unassigned.append((load, po, driver))
-            week_days.append(
-                {
-                    "date": current,
-                    "in_month": current.month == current_month.month,
-                    "driver_map": driver_map,
-                    "unassigned": unassigned,
-                }
-            )
-            current += timedelta(days=1)
-        calendar_weeks.append(week_days)
-        if current.month != current_month.month and current.day >= 7:
-            break
-
-    prev_month = (month_start - timedelta(days=1)).replace(day=1)
-    next_month = (month_end + timedelta(days=1)).replace(day=1)
-
-    return render_template(
-        "manager_calendar.html",
-        calendar_weeks=calendar_weeks,
-        drivers=drivers,
-        current_month=current_month,
-        prev_month=prev_month,
-        next_month=next_month,
     )
 
 
@@ -565,50 +477,6 @@ def ready_to_bill():
 
     rows = query.order_by(LoadAssignment.delivery_date, PurchaseOrder.po_number).all()
     return render_template("manager_ready_to_bill.html", rows=rows)
-
-
-@app.route("/manager/load/<int:load_id>", methods=["GET", "POST"])
-@login_required
-@manager_required
-def manager_load_detail(load_id: int):
-    load = LoadAssignment.query.get_or_404(load_id)
-    po = PurchaseOrder.query.get_or_404(load.purchase_order_id)
-    drivers = User.query.filter_by(role="driver", active=True).order_by(User.name).all()
-
-    if request.method == "POST":
-        action = request.form.get("action")
-        if action == "save_assignment":
-            driver_id = request.form.get("driver_id")
-            load.driver_id = int(driver_id) if driver_id else None
-            load.delivery_date = datetime.strptime(request.form["delivery_date"], "%Y-%m-%d").date()
-            load.manager_notes = request.form.get("manager_notes", "")
-            load.status = "assigned" if load.driver_id else "unassigned"
-        elif action == "approve_submitted" and load.status == "submitted":
-            load.status = "approved"
-            load.approved_at = datetime.now(timezone.utc)
-            load.approved_by = current_user.id
-        elif action == "reject_submitted" and load.status == "submitted":
-            load.status = "rejected"
-            load.rejection_notes = request.form.get("rejection_notes")
-        elif action == "mark_billed" and load.status == "approved":
-            load.status = "billed"
-            load.billed_at = datetime.now(timezone.utc)
-            load.billed_by = current_user.id
-            load.billing_notes = request.form.get("billing_notes")
-        db.session.commit()
-        return redirect(url_for("manager_load_detail", load_id=load.id))
-
-    events = TripEvent.query.filter_by(load_assignment_id=load.id).order_by(TripEvent.timestamp).all()
-    driver = db.session.get(User, load.driver_id) if load.driver_id else None
-
-    return render_template(
-        "manager_load_detail.html",
-        load=load,
-        po=po,
-        driver=driver,
-        drivers=drivers,
-        events=events,
-    )
 
 
 @app.route("/manager/google-sync")
