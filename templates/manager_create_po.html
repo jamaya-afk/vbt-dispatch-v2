@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Create Purchase Order</h2>
+<form method="post" class="card">
+  <label>PO Number <input name="po_number" required></label>
+  <label>Customer <input name="customer" required></label>
+  <label>Job Site Address <input name="job_site_address" required></label>
+  <label>Delivery Date <input type="date" name="delivery_date" required></label>
+  <label>Pickup Yard <input name="pickup_yard" required></label>
+  <label>Manager Notes <textarea name="notes"></textarea></label>
+
+  <h3>Materials</h3>
+  <p>Use one row per material. Enter driver usernames in assignment order (comma-separated), leave blank for unassigned loads.</p>
+  <div id="materials">
+    <div class="material-row">
+      <input name="material_name" placeholder="Material name">
+      <input name="number_of_loads" type="number" min="1" placeholder="Number of loads">
+      <input name="driver_assignments" placeholder="beryle,matthew">
+    </div>
+  </div>
+  <button type="button" onclick="addRow()">Add Material Row</button>
+  <button type="submit">Create PO + Loads</button>
+</form>
+
+<p>Active drivers: {% for d in drivers %}<code>{{ d.username }}</code>{% if not loop.last %}, {% endif %}{% endfor %}</p>
+
+<script>
+function addRow() {
+  const row = document.createElement('div');
+  row.className = 'material-row';
+  row.innerHTML = '<input name="material_name" placeholder="Material name">\n<input name="number_of_loads" type="number" min="1" placeholder="Number of loads">\n<input name="driver_assignments" placeholder="beryle,matthew">';
+  document.getElementById('materials').appendChild(row);
+}
+</script>
+{% endblock %}

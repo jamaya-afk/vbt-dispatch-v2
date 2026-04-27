@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>{{ 'Completed Loads' if completed else 'My Loads' }}</h2>
+{% for load, po in loads %}
+<div class="card load">
+  <h3>PO #{{ po.po_number }} — {{ po.customer }}</h3>
+  <p><strong>Address:</strong> {{ po.job_site_address }}</p>
+  <p><strong>Delivery Date:</strong> {{ load.delivery_date }}</p>
+  <p><strong>Material:</strong> {{ load.material_name }}</p>
+  <p><strong>Load:</strong> {{ load.load_number }} of {{ load.total_loads_for_material }}</p>
+  <p><strong>Pickup Yard:</strong> {{ load.pickup_yard }}</p>
+  <p><strong>Notes:</strong> {{ load.manager_notes or '-' }}</p>
+  <p><strong>Status:</strong> {{ load.status }}</p>
+
+  {% if not completed %}
+  <div class="actions">
+    {% for event, label in [
+      ('started_trip','Start Trip'),
+      ('arrived_at_yard','Arrived at Yard'),
+      ('ticket_uploaded','Upload Ticket Photo'),
+      ('customer_signed','Customer Signature'),
+      ('delivered','Delivered'),
+      ('submitted_to_manager','Submit to Manager')
+    ] %}
+    <form method="post" action="{{ url_for('driver_event', load_id=load.id) }}" enctype="multipart/form-data" onsubmit="event.preventDefault(); autoGps(this);">
+      <input type="hidden" name="event_type" value="{{ event }}">
+      <input type="hidden" name="gps_latitude">
+      <input type="hidden" name="gps_longitude">
+      {% if event == 'ticket_uploaded' %}
+      <input type="file" name="ticket_photo" accept="image/*" required>
+      {% endif %}
+      {% if event == 'customer_signed' %}
+      <input type="file" name="signature" accept="image/*" required>
+      {% endif %}
+      <button type="submit">{{ label }}</button>
+    </form>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% else %}
+<p>No loads found.</p>
+{% endfor %}
+{% endblock %}

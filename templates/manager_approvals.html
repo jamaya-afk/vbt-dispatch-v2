@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Approvals</h2>
+{% for load, po, driver in rows %}
+<div class="card">
+  <h3>PO #{{ po.po_number }} — {{ po.customer }}</h3>
+  <p><strong>Driver:</strong> {{ driver.name if driver else 'Unassigned' }}</p>
+  <p><strong>Material:</strong> {{ load.material_name }} {{ load.load_number }}/{{ load.total_loads_for_material }}</p>
+  <p><strong>Delivery Date:</strong> {{ load.delivery_date }}</p>
+  <p><strong>Ticket:</strong>
+    {% if load.ticket_photo_path %}<a href="{{ url_for('uploaded_file', filename=load.ticket_photo_path.replace('uploads/', '')) }}">View Ticket</a>{% else %}Missing{% endif %}
+  </p>
+  <p><strong>Signature:</strong>
+    {% if load.signature_path %}<a href="{{ url_for('uploaded_file', filename=load.signature_path.replace('uploads/', '')) }}">View Signature</a>{% else %}Missing{% endif %}
+  </p>
+  <h4>Trip Events</h4>
+  <ul>
+    {% for event in event_map[load.id] %}
+    <li>{{ event.event_type }} at {{ event.timestamp }} ({{ event.gps_latitude }}, {{ event.gps_longitude }})</li>
+    {% endfor %}
+  </ul>
+  <form method="post">
+    <input type="hidden" name="load_id" value="{{ load.id }}">
+    <button name="action" value="approve" type="submit">Approve</button>
+    <input name="rejection_notes" placeholder="Rejection notes">
+    <button name="action" value="reject" type="submit">Reject</button>
+  </form>
+</div>
+{% else %}
+<p>No submitted loads waiting for review.</p>
+{% endfor %}
+{% endblock %}
