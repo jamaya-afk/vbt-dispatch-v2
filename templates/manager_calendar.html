@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card toolbar">
+  <div class="calendar-nav">
+    <a class="btn-link" href="{{ url_for('manager_calendar', month=prev_month.strftime('%Y-%m')) }}">← Previous Month</a>
+    <h2>{{ current_month.strftime('%B %Y') }}</h2>
+    <a class="btn-link" href="{{ url_for('manager_calendar', month=next_month.strftime('%Y-%m')) }}">Next Month →</a>
+    <a class="btn-link" href="{{ url_for('manager_calendar') }}">Today</a>
+  </div>
+  <form method="get" class="calendar-filters">
+    <input type="hidden" name="month" value="{{ current_month.strftime('%Y-%m') }}">
+    <label>Driver
+      <select name="driver">
+        <option value="">All Drivers</option>
+        <option value="unassigned">Unassigned only</option>
+        {% for driver in drivers %}
+        <option value="{{ driver.id }}">{{ driver.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Status
+      <select name="status">
+        <option value="">All Statuses</option>
+        {% for s in ['unassigned','assigned','in_progress','delivered','submitted','approved','rejected','billed'] %}
+        <option value="{{ s }}">{{ s.replace('_',' ').title() }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Customer / PO <input name="search" placeholder="ABC or 1001"></label>
+    <button type="submit">Apply</button>
+  </form>
+</div>
+
+<div class="calendar-grid">
+  {% for weekday in ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] %}
+    <div class="weekday">{{ weekday }}</div>
+  {% endfor %}
+
+  {% for week in calendar_weeks %}
+    {% for day in week %}
+    <section class="day-cell {% if not day.in_month %}outside{% endif %}">
+      <div class="day-header">{{ day.date.strftime('%a %b %-d') }}</div>
+      {% for driver in drivers %}
+        <div class="driver-row">
+          <strong>{{ driver.name }}</strong>
+          {% if day.driver_map[driver.id] %}
+            {% for load, po, _ in day.driver_map[driver.id] %}
+            <a class="load-chip status-{{ load.status }}" href="{{ url_for('manager_load_detail', load_id=load.id) }}">
+              {{ po.po_number }} · {{ po.customer }} · {{ load.material_name }} · {{ load.load_number }}/{{ load.total_loads_for_material }} · {{ load.status }}
+            </a>
+            {% endfor %}
+          {% else %}
+            <span class="free-chip">FREE</span>
+          {% endif %}
+        </div>
+      {% endfor %}
+      <div class="driver-row">
+        <strong>Unassigned</strong>
+        {% if day.unassigned %}
+          {% for load, po, _ in day.unassigned %}
+          <a class="load-chip status-unassigned" href="{{ url_for('manager_load_detail', load_id=load.id) }}">
+            {{ po.po_number }} · {{ po.customer }} · {{ load.material_name }} · {{ load.load_number }}/{{ load.total_loads_for_material }}
+          </a>
+          {% endfor %}
+        {% else %}
+          <span class="free-chip">None</span>
+        {% endif %}
+      </div>
+    </section>
+    {% endfor %}
+  {% endfor %}
+</div>
+{% endblock %}

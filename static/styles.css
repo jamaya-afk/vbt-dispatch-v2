@@ -1,0 +1,17 @@
+body { font-family: Arial, sans-serif; margin: 0; background: #f4f5f7; }
+header { background: #0f3460; color: #fff; padding: 14px; }
+header h1 { margin: 0 0 8px; font-size: 1.2rem; }
+nav a { color: #fff; margin-right: 10px; text-decoration: none; font-weight: 600; }
+main { padding: 16px; }
+.card { background: #fff; border-radius: 8px; padding: 12px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+.load { border-left: 6px solid #0f3460; }
+label { display: block; margin: 8px 0; }
+input, textarea, select, button { width: 100%; padding: 8px; margin-top: 4px; box-sizing: border-box; }
+button { background: #0f3460; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
+.actions form { margin-bottom: 8px; }
+.material-row { display: grid; grid-template-columns: 2fr 1fr 2fr; gap: 8px; margin-bottom: 6px; }
+table { width: 100%; border-collapse: collapse; background: #fff; }
+th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+.flash { padding: 8px; margin: 8px 16px; border-radius: 6px; }
+.flash.success { background: #ddffdd; }
+.flash.error { background: #ffd6d6; }

@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Load Detail — PO #{{ po.po_number }}</h2>
+<div class="card">
+  <p><strong>Customer:</strong> {{ po.customer }}</p>
+  <p><strong>Job Site:</strong> {{ po.job_site_address }}</p>
+  <p><strong>Delivery Date:</strong> {{ load.delivery_date }}</p>
+  <p><strong>Pickup Yard:</strong> {{ load.pickup_yard }}</p>
+  <p><strong>Material:</strong> {{ load.material_name }}</p>
+  <p><strong>Load Number:</strong> {{ load.load_number }} of {{ load.total_loads_for_material }}</p>
+  <p><strong>Assigned Driver:</strong> {{ driver.name if driver else 'Unassigned' }}</p>
+  <p><strong>Status:</strong> {{ load.status }}</p>
+  <p><strong>Manager Notes:</strong> {{ load.manager_notes or '-' }}</p>
+  <p><strong>Ticket:</strong> {% if load.ticket_photo_path %}<a href="{{ url_for('uploaded_file', filename=load.ticket_photo_path.replace('uploads/', '')) }}">View</a>{% else %}None{% endif %}</p>
+  <p><strong>Signature:</strong> {% if load.signature_path %}<a href="{{ url_for('uploaded_file', filename=load.signature_path.replace('uploads/', '')) }}">View</a>{% else %}None{% endif %}</p>
+  <p><strong>Approval:</strong> {{ load.approved_at or 'Not approved' }}</p>
+  <p><strong>Billing:</strong> {{ load.billed_at or 'Not billed' }}</p>
+</div>
+
+<div class="card">
+  <h3>Assign / Reassign</h3>
+  <form method="post">
+    <input type="hidden" name="action" value="save_assignment">
+    <label>Driver
+      <select name="driver_id">
+        <option value="">Unassigned</option>
+        {% for d in drivers %}
+        <option value="{{ d.id }}" {% if load.driver_id == d.id %}selected{% endif %}>{{ d.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Delivery Date <input type="date" name="delivery_date" value="{{ load.delivery_date }}" required></label>
+    <label>Manager Notes <textarea name="manager_notes">{{ load.manager_notes or '' }}</textarea></label>
+    <button type="submit">Save Changes</button>
+  </form>
+</div>
+
+<div class="card">
+  <h3>Manager Actions</h3>
+  {% if load.status == 'submitted' %}
+    <form method="post"><input type="hidden" name="action" value="approve_submitted"><button type="submit">Approve Submitted Load</button></form>
+    <form method="post"><input type="hidden" name="action" value="reject_submitted"><input name="rejection_notes" placeholder="Reason"><button type="submit">Reject Submitted Load</button></form>
+  {% endif %}
+  {% if load.status == 'approved' %}
+    <form method="post"><input type="hidden" name="action" value="mark_billed"><input name="billing_notes" placeholder="Billing notes"><button type="submit">Mark as Billed</button></form>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h3>Trip Events</h3>
+  <ul>
+    {% for event in events %}
+    <li>{{ event.event_type }} — {{ event.timestamp }} — GPS: {{ event.gps_latitude }}, {{ event.gps_longitude }}</li>
+    {% else %}
+    <li>No events recorded.</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}
