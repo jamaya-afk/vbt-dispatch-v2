@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dispatch MVP</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <header>
+    <h1>Dispatch Driver App</h1>
+    {% if current_user.is_authenticated %}
+      <nav>
+        {% if current_user.role == 'manager' %}
+          <a href="{{ url_for('dispatch_board') }}">Dispatch Board</a>
+          <a href="{{ url_for('create_po') }}">Create PO</a>
+          <a href="{{ url_for('approvals') }}">Approvals</a>
+          <a href="{{ url_for('ready_to_bill') }}">Ready to Bill</a>
+          <a href="{{ url_for('google_sync') }}">Google Sheets Sync</a>
+        {% else %}
+          <a href="{{ url_for('driver_loads') }}">My Loads</a>
+          <a href="{{ url_for('driver_completed') }}">Completed Loads</a>
+        {% endif %}
+        <a href="{{ url_for('logout') }}">Logout</a>
+      </nav>
+    {% endif %}
+  </header>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+<script>
+function autoGps(form) {
+  if (!navigator.geolocation) {
+    form.submit();
+    return;
+  }
+  navigator.geolocation.getCurrentPosition((position) => {
+    form.querySelector('input[name="gps_latitude"]').value = position.coords.latitude;
+    form.querySelector('input[name="gps_longitude"]').value = position.coords.longitude;
+    form.submit();
+  }, () => form.submit());
+}
+</script>
+</body>
+</html>
